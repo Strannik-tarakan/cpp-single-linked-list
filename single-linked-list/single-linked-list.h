@@ -8,6 +8,7 @@
 #include <algorithm>
 
 
+
 template <typename Type>
 class SingleLinkedList {
 
@@ -127,7 +128,7 @@ public:
     }
 
     SingleLinkedList& operator=(const SingleLinkedList& rhs) {
-        if (this->head_.next_node == rhs.head_.next_node && this->size_ == rhs.size_) {
+        if (this == rhs) {
             return *this;
         }
         SingleLinkedList tmp(rhs);
@@ -140,25 +141,15 @@ public:
     }
 
     [[nodiscard]] size_t GetSize() const noexcept {
-
         return size_;
     }
     [[nodiscard]] bool IsEmpty() const noexcept {
-
-        bool x = size_ == 0 ? true : false;
-        return x;
+        return  size_ == 0 ? true : false;
     }
 
     void PushFront(const Type& value) {
         head_.next_node = new Node(value, head_.next_node);
         ++size_;
-    }
-    void PopFront() noexcept {
-        assert(head_.next_node);
-        Node* old_node = head_.next_node;
-        head_.next_node = old_node->next_node;
-        delete old_node;
-        --size_;
     }
     Iterator InsertAfter(ConstIterator pos, const Type& value) {
         assert(pos.node_);
@@ -166,6 +157,14 @@ public:
         pos.node_->next_node = new_node;
         ++size_;
         return BasicIterator<Type>(new_node);
+    }
+
+    void PopFront() noexcept {
+        assert(head_.next_node);
+        Node* old_node = head_.next_node;
+        head_.next_node = old_node->next_node;
+        delete old_node;
+        --size_;
     }
     Iterator EraseAfter(ConstIterator pos) noexcept {
         assert(pos.node_ && pos.node_->next_node);
@@ -175,6 +174,8 @@ public:
         --size_;
         return BasicIterator<Type>(pos.node_->next_node);
     }
+
+
 
     void Clear() noexcept {
         if (size_ == 0) {
@@ -191,12 +192,8 @@ public:
     }
 
     void swap(SingleLinkedList& other) noexcept {
-        int size_this = size_;
-        auto head_this = head_.next_node;
-        size_ = other.size_;
-        head_.next_node = other.head_.next_node;
-        other.head_.next_node = head_this;
-        other.size_ = size_this;
+        std::swap(head_.next_node, other.head_.next_node);
+        std::swap(size_, other.size_);
     }
 
 
@@ -205,19 +202,19 @@ private:
     size_t size_ = 0;
 
     template<typename Iterator>
-    void CopyObject(Iterator begin, Iterator end, bool second_call = false) {
+    void CopyObject(Iterator begin, Iterator end) {
         SingleLinkedList tmp;
+        auto it_before = tmp.before_begin();
         while (begin != end) {
-            tmp.PushFront(*begin);
+            tmp.InsertAfter(it_before, *begin);
+            ++it_before;
             ++begin;
         }
-        if (second_call) {
-            swap(tmp);
-        }
-        else {
-            CopyObject(tmp.begin(), tmp.end(), true);
-        }
+        swap(tmp);
     }
+    //Делал изначально по другому так как в первую очередь нам предлагают это реализовать
+    //а только в следущей задаче мы реализуем вставку после определенного итератора
+    //а еще хотел уточнить какая скорость у InsertAfter O(1) или О(n) в худшем случае?
 };
 
 template <typename Type>
